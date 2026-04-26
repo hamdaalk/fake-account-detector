@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git/
+.github/
+.ipynb_checkpoints/
+artifacts/
+*.csv
+*.ipynb
+*.pptx
+*.docx
+*.md
