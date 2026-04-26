@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="landing-body">
+    <main class="landing-shell">
+        <section class="landing-card">
+            <div class="landing-copy">
+                <p class="landing-kicker">glam mode on</p>
+                <h1>Hi Barbie</h1>
+                <p class="landing-text">
+                    Choose how you want to classify profiles.
+                </p>
+
+                <div class="landing-actions">
+                    <a href="{{ url_for('manual_page') }}" class="landing-btn primary-btn">Manual</a>
+                    <a href="{{ url_for('upload_page') }}" class="landing-btn secondary-btn">Drop &amp; Classify</a>
+                </div>
+            </div>
+
+            <div class="landing-visual">
+                <div class="hero-frame">
+                    <img
+                        src="https://i.pinimg.com/736x/fe/1b/a6/fe1ba664091871da464681442182c714.jpg"
+                        alt="Pink glam fashion visual"
+                    >
+                </div>
+                <div class="floating-badge badge-top">classify</div>
+                <div class="floating-badge badge-bottom">pretty & precise</div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

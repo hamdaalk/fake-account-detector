@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Drop & Classify</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <main class="page-shell">
+        <section class="topbar">
+            <a href="{{ url_for('home') }}" class="back-link">← Home</a>
+            <a href="{{ url_for('manual_page') }}" class="mini-nav-link">Manual</a>
+        </section>
+
+        <section class="hero-card compact-hero">
+            <div class="hero-copy">
+                <h1>Drop &amp; Classify</h1>
+                <p class="lede">
+                    Upload a CSV, XLSX, or JSON file to classify multiple accounts at once.
+                </p>
+            </div>
+
+            <div class="hero-metric small-metric">
+                <span class="metric-label">Mode</span>
+                <strong>Bulk Upload</strong>
+                <span class="metric-subtext">Preview + CSV export</span>
+            </div>
+        </section>
+
+        <section class="panel upload-panel">
+            <div class="panel-header">
+                <h2>Upload File</h2>
+                <p>Accepted formats: CSV, XLSX, JSON</p>
+            </div>
+
+            <form id="upload-form" class="upload-form">
+                <label for="file-input" class="upload-dropzone">
+                    <input type="file" id="file-input" name="file" accept=".csv,.xlsx,.json" required>
+                    <span class="upload-title">Drop your file here</span>
+                    <span class="upload-subtext">or click to browse</span>
+                </label>
+
+                <div class="form-actions upload-actions">
+                    <button type="submit" class="primary-btn">Upload &amp; Predict</button>
+                </div>
+            </form>
+
+            <div id="upload-result" class="upload-result">
+                <div class="empty-state">
+                    <h3>No file uploaded yet</h3>
+                    <p>Your preview, totals, and download button will appear here.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const uploadForm = document.getElementById("upload-form");
+        const fileInput = document.getElementById("file-input");
+        const resultBox = document.getElementById("upload-result");
+        const dropzone = document.querySelector(".upload-dropzone");
+
+        uploadForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const file = fileInput.files[0];
+
+            if (!file) {
+                resultBox.innerHTML = `
+                    <div class="alert alert-error" role="alert">Please choose a file first.</div>
+                `;
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            resultBox.innerHTML = `
+                <div class="empty-state">
+                    <h3>Processing file...</h3>
+                    <p>Please wait while the rows are being classified.</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch("/predict-file", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || data.error) {
+                    resultBox.innerHTML = `
+                        <div class="alert alert-error" role="alert">${data.error || "Something went wrong."}</div>
+                    `;
+                    return;
+                }
+
+                const preview = Array.isArray(data.preview) ? data.preview : [];
+                const headers = preview.length
+                    ? Object.keys(preview[0]).map(key => `<th>${key}</th>`).join("")
+                    : "";
+
+                const rows = preview.map(row => `
+                    <tr>
+                        ${Object.values(row).map(value => `<td>${value ?? ""}</td>`).join("")}
+                    </tr>
+                `).join("");
+
+                resultBox.innerHTML = `
+                    <div class="bulk-summary">
+                        <div class="summary-pill">
+                            <span class="summary-label">Total Rows</span>
+                            <strong>${data.total_rows}</strong>
+                        </div>
+                        <div class="summary-pill fake-pill">
+                            <span class="summary-label">Predicted Fake</span>
+                            <strong>${data.fake_count}</strong>
+                        </div>
+                        <div class="summary-pill real-pill">
+                            <span class="summary-label">Predicted Not Fake</span>
+                            <strong>${data.real_count}</strong>
+                        </div>
+                    </div>
+
+                    <div class="download-wrap">
+                        <a class="primary-btn download-link" href="${data.download_url}">Download CSV</a>
+                    </div>
+
+                    ${preview.length ? `
+                        <div class="table-wrap">
+                            <table class="preview-table">
+                                <thead>
+                                    <tr>${headers}</tr>
+                                </thead>
+                                <tbody>
+                                    ${rows}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : ""}
+                `;
+            } catch (error) {
+                resultBox.innerHTML = `
+                    <div class="alert alert-error" role="alert">Upload failed. Please try again.</div>
+                `;
+            }
+        });
+
+        dropzone.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            dropzone.classList.add("drag-active");
+        });
+
+        dropzone.addEventListener("dragleave", function () {
+            dropzone.classList.remove("drag-active");
+        });
+
+        dropzone.addEventListener("drop", function (e) {
+            e.preventDefault();
+            dropzone.classList.remove("drag-active");
+
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Manual Classify</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <main class="page-shell">
+        <section class="topbar">
+            <a href="{{ url_for('home') }}" class="back-link">← Home</a>
+            <a href="{{ url_for('upload_page') }}" class="mini-nav-link">Drop &amp; Classify</a>
+        </section>
+
+        <section class="hero-card compact-hero">
+            <div class="hero-copy">
+                <h1>Manual Classify</h1>
+                <p class="lede">
+                    Fill the profile signals below to predict whether the account looks fake or genuine.
+                </p>
+            </div>
+
+            <div class="hero-metric small-metric">
+                <span class="metric-label">Mode</span>
+                <strong>Manual</strong>
+                <span class="metric-subtext">One profile at a time</span>
+            </div>
+        </section>
+
+        <section class="workspace">
+            <form method="post" action="{{ url_for('predict_form') }}" class="panel form-panel" novalidate>
+                <div class="panel-header">
+                    <h2>Profile Inputs</h2>
+                    <p>Fill every field to match the model schema exactly.</p>
+                </div>
+
+                {% if error %}
+                <div class="alert alert-error" role="alert">{{ error }}</div>
+                {% endif %}
+
+                <div class="field-grid">
+                    {% for field in fields %}
+                    <div class="field-card">
+                        <label for="{{ field.name }}">{{ field.label }}</label>
+                        <p class="hint">{{ field.hint }}</p>
+
+                        {% if field.kind == "boolean" %}
+                        <div class="segmented-control" role="radiogroup" aria-label="{{ field.label }}">
+                            <label class="segmented-option">
+                                <input
+                                    type="radio"
+                                    name="{{ field.name }}"
+                                    value="1"
+                                    {% if values[field.name]|string == "1" %}checked{% endif %}
+                                    required
+                                >
+                                <span>Yes</span>
+                            </label>
+                            <label class="segmented-option">
+                                <input
+                                    type="radio"
+                                    name="{{ field.name }}"
+                                    value="0"
+                                    {% if values[field.name]|string == "0" %}checked{% endif %}
+                                    required
+                                >
+                                <span>No</span>
+                            </label>
+                        </div>
+                        {% else %}
+                        <input
+                            id="{{ field.name }}"
+                            name="{{ field.name }}"
+                            type="number"
+                            step="{{ field.step }}"
+                            min="{{ field.min }}"
+                            placeholder="{{ field.placeholder }}"
+                            value="{{ values[field.name] }}"
+                            required
+                            inputmode="decimal"
+                        >
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="primary-btn">Predict Account Type</button>
+                    <button type="reset" class="secondary-btn">Clear Form</button>
+                </div>
+            </form>
+
+            <aside class="panel result-panel">
+                <div class="panel-header">
+                    <h2>Prediction Result</h2>
+                    <p>The model returns both a class label and a confidence score.</p>
+                </div>
+
+                {% if result %}
+                <div class="result-card {{ result.tone }}">
+                    <div class="result-badge">{{ result.badge }}</div>
+                    <h3>{{ result.title }}</h3>
+                    <p>{{ result.message }}</p>
+                    <dl class="result-stats">
+                        <div>
+                            <dt>Prediction</dt>
+                            <dd>{{ result.prediction }}</dd>
+                        </div>
+                        <div>
+                            <dt>Confidence</dt>
+                            <dd>{{ result.confidence }}</dd>
+                        </div>
+                    </dl>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <h3>No prediction yet</h3>
+                    <p>Complete the form and submit it to generate a result card here.</p>
+                </div>
+                {% endif %}
+
+                <div class="mini-card">
+                    <h3>Quick Notes</h3>
+                    <ul>
+                        <li>Use this mode for one account only.</li>
+                        <li>Every field is required.</li>
+                        <li>For bulk rows, use Drop &amp; Classify.</li>
+                    </ul>
+                </div>
+            </aside>
+        </section>
+    </main>
+</body>
+</html>
